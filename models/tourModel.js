@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 const slugify = require('slugify');
 //const validator = require('validator'); //For external validator like string vsalidator
-
 const tourSchema = new mongoose.Schema(
   {
     //schema is created first
@@ -107,7 +106,8 @@ const tourSchema = new mongoose.Schema(
         description: String,
         day: Number
       }
-    ]
+    ],
+    guides: [{ type: mongoose.Schema.ObjectId, ref: 'User' }]
   },
   {
     toJSON: { virtuals: true },
@@ -123,6 +123,13 @@ tourSchema.pre('save', function (next) {
   this.slug = slugify(this.name, { lower: true });
   next();
 });
+
+// tourSchema.pre('save', async function (next) {
+//   const guidesPromises = this.guides.map(async (id) => await User.findById(id));
+//   this.guides = await Promise.all(guidesPromises);
+//   next();
+//   // before saving this middleware will loop for the ids passed into the guides(Array) and find the users associated with them then embed/save their details instead of just id.
+// });//Embedding, going to use reference instead
 
 // tourSchema.pre('save', function (next) {
 //   console.log('Will save document');
@@ -144,6 +151,15 @@ tourSchema.post(/^find/, function (docs, next) {
   console.log(Date.now() - this.start);
   next();
 });
+
+tourSchema.pre(/^find/, function (next) {
+  this.populate({
+    path: 'guides',
+    select: '-__v -passwordChangedAt' //get rid of these when querying
+  });
+  next();
+});
+
 //AGgregation MIDDLEWARE
 tourSchema.pre('aggregate', function (next) {
   this.pipeline().unshift({
