@@ -16,7 +16,7 @@ router.route('/tour-stats').get(tourController.getTourStats);
 
 router
   .route('/')
-  .get(authController.protect, tourController.getAllTours)
+  .get(tourController.getAllTours)
   .post(tourController.createTour);
 router
   .route('/:id')
